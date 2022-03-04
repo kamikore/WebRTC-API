@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体设备的使用</title>
+
+    <script src="vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div id="audio" style="margin: 40px auto;">
+            <h3 class="heading">Using Microphone</h3>
+            <audio ref="audio" controls></audio>
+            <div>
+                <select name="audioInputDevices" id="audioInputDevices" v-model="audioDeviceIndex"
+                    style="margin: 10px 0;">
+                    <option :value="index" v-for="(item, index) in audioInputDevices">{{item.label}}</option>
+                </select>
+                <div class="btn-group" style="display: flex; gap: 10px;">
+                    <button @click="start('audio')" :disabled="audioRecording">start</button>
+                    <button @click="pause('audio')" :disabled="!audioRecording || audioPaused">pause</button>
+                    <button @click="resume('audio')" :disabled="!audioRecording || !audioPaused">resume</button>
+                    <button @click="stop('audio')" :disabled="!audioRecording">stop</button>
+                    <button @click="play('audio')" :disabled="!audioWebmData">play</button>
+                </div>
+            </div>
+        </div>
+        <div id="video">
+            <h3 class="heading">Using Camera</h3>
+            <video ref="video" style="width: 500px; height: 300px; margin: 0 20px ;" controls></video>
+            <canvas ref="canvas" style="width: 500px; height: 300px; background-color: black; "></canvas>
+            <div>
+                <select name="" id="" style="margin: 10px 0;">
+                    <option value="" v-for="(item,index) in videoInputDevices">{{item.label}}</option>
+                </select>
+
+                <div class="btn-group" style="display: flex; gap: 10px;">
+                    <button @click="takePhoto">拍照截图</button>
+                    <button @click="start('video')" :disabled="videoRecording">start</button>
+                    <button @click="pause('video')" :disabled="!videoRecording || videoPaused">pause</button>
+                    <button @click="resume('video')" :disabled="!videoRecording || !videoPaused">resume</button>
+                    <button @click="stop('video')" :disabled="!videoRecording">stop</button>
+                    <button @click="play('video')" :disabled="!videoWebmData && !screenWebmData">play</button>
+                    <button @click="screenRecording">屏幕录制</button>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+
+</html>
