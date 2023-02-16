@@ -16,6 +16,13 @@ const app = {
     },
     data() {
         return {
+            // 视频录制提示信息
+            videoTip:'',
+
+            // 媒体流记录器
+            _audioRecorder:null,
+            _videoRecorder:null,
+
             // 设备信息
             audioInputDevices: [],
             audioDeviceIndex: 0,
@@ -36,53 +43,10 @@ const app = {
     created() {
         this.getDevices();
 
-        // 请求使用麦克风，媒体输入会产生MediaStream ,  注意如果参数constraints没包含video或audio 无效
-        navigator.mediaDevices.getUserMedia({
-                video: false,
-                audio: true
-            }).then((stream) => {
-                /* 使用这个stream stream */
-
-                this._audioRecorder = new MediaRecorder(stream, {
-                    mimeType: "video/webm;codecs=h264"
-                })
-                this._audioRecorder.ondataavailable = (e) => {
-                    console.log("音频信息", e)
-                    this.audioWebmData = e.data;
-                }
-
-                // 实时播放
-                // this.$refs.audio.srcObject = stream;
-            })
-            .catch((err) => {
-                /* 处理error 包括用户拒绝权限*/
-                console.log("错误信息", err)
-            });
-
-
-        navigator.mediaDevices.getUserMedia({
-                // 允许音频和视频
-                video: true,
-                audio: true
-            }).then((stream) => {
-                /* 使用这个stream stream */
-
-                // 创建MediaRecorder 对象, 并设置编码格式
-                this._videoRecorder = new MediaRecorder(stream, {
-                    mimeType: "video/webm;codecs=h264"
-                })
-                this._videoRecorder.ondataavailable = (e) => {
-                    console.log("视频信息", e)
-                    this.videoWebmData = e.data;
-                }
-
-                // 实时播放
-                // this.$refs.video.srcObject = stream;
-            })
-            .catch((err) => {
-                /* 处理error 包括用户拒绝权限*/
-                console.log("错误信息", err)
-            });
+        // 初始音频录制
+        this.audioRecorder();
+        // 初始摄像头视频录制
+        this.videoRecorder();
 
     },
 
@@ -120,13 +84,18 @@ const app = {
             this.audioWebmData = null;
             this.videoWebmData = null;
 
-            if (mediaType === "audio") {
-                this.audioRecording = true;
-                this._audioRecorder.start();
-            } else {
-                this.videoRecording = true;
-                this._videoRecorder.start()
+            try {
+                if (mediaType === "audio") {
+                    this.audioRecording = true;
+                    this._audioRecorder.start();
+                } else {
+                    this.videoRecording = true;
+                    this._videoRecorder.start()
+                }
+            }catch(e) {
+                alert("发生错误,请检查是否允许或开启相关权限");
             }
+         
         },
 
         // 媒体录制暂停
@@ -156,7 +125,6 @@ const app = {
             if (mediaType === "audio") {
                 this.audioRecording = false;
                 this._audioRecorder.stop();
-
             } else {
                 this.videoRecording = false;
                 this._videoRecorder.stop()
@@ -173,24 +141,86 @@ const app = {
             }
         },
 
-        // 屏幕录制, 切换videoRecorder 的stream, 点击停止窗口无效的
-        screenRecording() {
+        // 获取音频设备,切换audioRecorder的 stream
+        audioRecorder() {
+            // 请求使用麦克风，媒体输入会产生MediaStream ,  注意如果参数constraints没包含video或audio 无效
+            navigator.mediaDevices.getUserMedia({
+                video: false,
+                audio: true
+            }).then((stream) => {
+                /* 使用这个stream stream */
+
+                this._audioRecorder = new MediaRecorder(stream, {
+                    mimeType: "video/webm;codecs=h264"
+                })
+                this._audioRecorder.ondataavailable = (e) => {
+                    console.log("音频信息", e)
+                    this.audioWebmData = e.data;
+                }
+
+                // 实时播放
+                // this.$refs.audio.srcObject = stream;
+            })
+            .catch((err) => {
+                /* 处理error 包括用户拒绝权限*/
+                alert("发生错误,请检查是否允许或开启相关权限");
+                console.log("错误信息", err)
+            });
+
+        },
+
+        // 获取视频设备(摄像头)，切换videoRecorder 的stream
+        videoRecorder() {
+            navigator.mediaDevices.getUserMedia({
+                // 允许音频和视频
+                video: true,
+                audio: true
+            }).then((stream) => {
+                /* 使用这个stream stream */
+
+                // 创建MediaRecorder 对象, 并设置编码格式
+                this._videoRecorder = new MediaRecorder(stream, {
+                    mimeType: "video/webm;codecs=h264"
+                })
+                this._videoRecorder.ondataavailable = (e) => {
+                    console.log("视频信息", e);
+                    
+                    this.videoWebmData = e.data;
+                }
+                this.videoTip = "当前为视频录制";
+                // 实时播放
+                // this.$refs.video.srcObject = stream;
+            })
+            .catch((err) => {
+                /* 处理error 包括用户拒绝权限*/
+                alert("发生错误,请检查是否允许或开启相关权限")
+                console.log("错误信息", err)
+            });
+        },
+
+        // 获取屏幕设备, 切换videoRecorder 的stream, 点击停止窗口无效的
+        screenRecorder() {
             navigator.mediaDevices.getDisplayMedia({
                     video: true,
                     audio: false,
                 }).then(stream => {
                     this._videoRecorder = new MediaRecorder(stream, {
                         mimeType: "video/webm;codecs=h264"
-                    })
+                    });
+                    
                     this._videoRecorder.ondataavailable = (e) => {
                         console.log("屏幕录制信息", e)
                         this.videoWebmData = e.data;
                     }
+                    this.videoTip = "当前为屏幕录制";
                 })
                 .catch(err => {
+                    alert("发生错误,请检查是否允许或开启相关权限")
                     console.log("错误信息", err)
                 })
-        }
+        },
+
+
 
     },
 

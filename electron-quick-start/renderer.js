@@ -13,7 +13,6 @@
     https://www.electronjs.org/zh/docs/latest/tutorial/quick-start#%E9%80%9A%E8%BF%87%E9%A2%84%E5%8A%A0%E8%BD%BD%E8%84%9A%E6%9C%AC%E4%BB%8E%E6%B8%B2%E6%9F%93%E5%99%A8%E8%AE%BF%E9%97%AEnodejs
 */
 
-
 const fs = require("fs")
 
 // 引入 electron dialog API 注意这是主进程模块, 当前渲染进程
@@ -35,17 +34,43 @@ const app = {
             heading: "hello vue ",
             videoWebmData: null,
             isRecording: false,
+            recordType: 0,
         }
     },
     methods: {
         async startRecording() {
-            this.isRecording = true;
-
-            this._audioStream = await navigator.mediaDevices.getUserMedia({
+            console.log("startRecording")
+            
+            navigator.mediaDevices.getUserMedia({
                 video: false,
                 audio: true
-            });
+            }).then(stream => {
+                console.log("音频设备",stream)
+            })
+            .catch(err => {
+                console.log("音频错误信息", err)
+                alert(err)
+            })
 
+           navigator.mediaDevices.getUserMedia({
+               video: true
+            }).then(stream => {
+                this.$refs.preview.srcObject = stream;
+           })
+           .catch(err => {
+                console.log("视频错误信息", err)
+                alert(err)
+            })
+
+
+
+            navigator.mediaDevices.getDisplayMedia({video: true})
+            .then(stream => {
+                 console.log("显示设备",stream)
+             }).catch(err => {
+                console.log("显示设备错误信息", err)
+                alert(err)
+            })
             navigator.mediaDevices.getUserMedia({
                     audio: false,
                     video: {
@@ -60,11 +85,13 @@ const app = {
                     }
                 })
                 .then(screenStream => {
-                    // 合成轨道
-                    screenStream.getVideoTracks().forEach(track => this._audioStream.addTrack(track));
+                    this.isRecording = true;
+                    // 合成音频轨道
+                    // screenStream.getVideoTracks().forEach(track => this._audioStream.addTrack(track));
 
                     console.log("视频轨道", screenStream.getVideoTracks())
-                    this.$refs.preview.srcObject = screenStream;
+                    // 开始预览
+                    // this.$refs.preview.srcObject = screenStream;
 
                     this._recorder = new MediaRecorder(this._audioStream, {
                         mimeType: "video/webm;codecs=h264"
@@ -90,13 +117,22 @@ const app = {
                 })
                 .catch(err => {
                     console.log("错误信息", err)
+                    alert(err)
                 })
 
         },
         stopRecording() {
+            // 停止预览播放
+            this.$refs.preview.srcObject = null
             this.isRecording = false;
             this._recorder.stop();
         }
+    },
+    mounted() {
+        if(!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia){
+            alert('getUserMedia is not supported!');
+          }
     },
 
 }
